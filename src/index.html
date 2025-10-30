@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FiveM Menu Framework</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+        }
+
+        .menu-container {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            max-height: 700px;
+            background: linear-gradient(135deg, rgba(20, 25, 45, 0.95), rgba(30, 35, 55, 0.95));
+            border-radius: 10px;
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .menu-container.visible {
+            display: block;
+        }
+
+        .menu-header {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.2), rgba(255, 140, 0, 0.2));
+            padding: 15px 20px;
+            border-bottom: 2px solid rgba(255, 165, 0, 0.5);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .banner-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .banner-container img {
+            max-width: 100%;
+            height: auto;
+            max-height: 100px;
+            border-radius: 5px;
+        }
+
+        .breadcrumb {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .menu-content {
+            padding: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .menu-item {
+            padding: 12px 15px;
+            margin: 5px 0;
+            background: rgba(40, 45, 65, 0.6);
+            border-left: 3px solid transparent;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 165, 0, 0.1);
+            border-left-color: rgba(255, 165, 0, 0.8);
+        }
+
+        .menu-item.active {
+            background: rgba(255, 165, 0, 0.2);
+            border-left-color: rgba(255, 165, 0, 1);
+        }
+
+        .menu-item-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .menu-item-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        .menu-item-value {
+            color: rgba(255, 165, 0, 0.9);
+            font-size: 12px;
+        }
+
+        .menu-footer {
+            padding: 10px 20px;
+            background: rgba(20, 25, 35, 0.8);
+            border-top: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 0 0 8px 8px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            text-align: center;
+        }
+
+        /* Notifications */
+        .notification-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+        }
+
+        .notification {
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            min-width: 300px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            background: rgba(46, 204, 113, 0.9);
+            color: white;
+        }
+
+        .notification.error {
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+        }
+
+        .notification.info {
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+        }
+
+        .notification.warn {
+            background: rgba(241, 196, 15, 0.9);
+            color: #333;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Text Input Modal */
+        .text-input-modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 25, 45, 0.98);
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 165, 0, 0.5);
+            min-width: 400px;
+            z-index: 10001;
+        }
+
+        .text-input-modal.visible {
+            display: block;
+        }
+
+        .text-input-label {
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .text-input-field {
+            width: 100%;
+            padding: 12px;
+            background: rgba(40, 45, 65, 0.8);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            border-radius: 5px;
+            color: #fff;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .text-input-field:focus {
+            outline: none;
+            border-color: rgba(255, 165, 0, 0.8);
+        }
+
+        .text-input-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: rgba(255, 165, 0, 0.8);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: rgba(255, 165, 0, 1);
+        }
+
+        .btn-secondary {
+            background: rgba(100, 100, 100, 0.8);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(100, 100, 100, 1);
+        }
+
+        /* Key Selection Modal */
+        .key-selection-modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 25, 45, 0.98);
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 165, 0, 0.5);
+            min-width: 400px;
+            text-align: center;
+            z-index: 10001;
+        }
+
+        .key-selection-modal.visible {
+            display: block;
+        }
+
+        .key-selection-title {
+            color: #fff;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .key-selection-instruction {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .key-selection-hint {
+            color: rgba(255, 165, 0, 0.7);
+            font-size: 12px;
+        }
+
+        /* Player Info Panel */
+        .player-info-panel {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 280px;
+            background: rgba(20, 25, 45, 0.95);
+            border-radius: 10px;
+            border: 2px solid rgba(255, 165, 0, 0.3);
+            padding: 15px;
+            display: none;
+        }
+
+        .player-info-panel.visible {
+            display: block;
+        }
+
+        .player-info-header {
+            color: rgba(255, 165, 0, 0.9);
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 165, 0, 0.3);
+            padding-bottom: 8px;
+        }
+
+        .player-info-item {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .player-info-label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .player-info-value {
+            color: rgba(255, 165, 0, 0.9);
+        }
+
+        /* Scrollbar */
+        .menu-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .menu-content::-webkit-scrollbar-track {
+            background: rgba(20, 25, 35, 0.5);
+            border-radius: 4px;
+        }
+
+        .menu-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 165, 0, 0.5);
+            border-radius: 4px;
+        }
+
+        .menu-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 165, 0, 0.8);
+        }
+
+        /* Theme colors */
+        .theme-blue {
+            border-color: rgba(52, 152, 219, 0.3);
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.2);
+        }
+
+        .theme-blue .menu-header {
+            background: linear-gradient(135deg, rgba(52, 152, 219, 0.2), rgba(41, 128, 185, 0.2));
+            border-bottom-color: rgba(52, 152, 219, 0.5);
+        }
+
+        .theme-blue .menu-item.active {
+            background: rgba(52, 152, 219, 0.2);
+            border-left-color: rgba(52, 152, 219, 1);
+        }
+
+        .theme-purple {
+            border-color: rgba(155, 89, 182, 0.3);
+            box-shadow: 0 0 30px rgba(155, 89, 182, 0.2);
+        }
+
+        .theme-purple .menu-header {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.2), rgba(142, 68, 173, 0.2));
+            border-bottom-color: rgba(155, 89, 182, 0.5);
+        }
+
+        .theme-purple .menu-item.active {
+            background: rgba(155, 89, 182, 0.2);
+            border-left-color: rgba(155, 89, 182, 1);
+        }
+
+        .theme-orange {
+            border-color: rgba(255, 165, 0, 0.3);
+            box-shadow: 0 0 30px rgba(255, 165, 0, 0.2);
+        }
+
+        .theme-orange .menu-header {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.2), rgba(255, 140, 0, 0.2));
+            border-bottom-color: rgba(255, 165, 0, 0.5);
+        }
+
+        .theme-orange .menu-item.active {
+            background: rgba(255, 165, 0, 0.2);
+            border-left-color: rgba(255, 165, 0, 1);
+        }
+
+        .theme-pink {
+            border-color: rgba(255, 105, 180, 0.3);
+            box-shadow: 0 0 30px rgba(255, 105, 180, 0.2);
+        }
+
+        .theme-pink .menu-header {
+            background: linear-gradient(135deg, rgba(255, 105, 180, 0.2), rgba(255, 20, 147, 0.2));
+            border-bottom-color: rgba(255, 105, 180, 0.5);
+        }
+
+        .theme-pink .menu-item.active {
+            background: rgba(255, 105, 180, 0.2);
+            border-left-color: rgba(255, 105, 180, 1);
+        }
+
+        .theme-dark {
+            border-color: rgba(100, 100, 100, 0.3);
+            box-shadow: 0 0 30px rgba(100, 100, 100, 0.2);
+        }
+
+        .theme-dark .menu-header {
+            background: linear-gradient(135deg, rgba(60, 60, 60, 0.2), rgba(40, 40, 40, 0.2));
+            border-bottom-color: rgba(100, 100, 100, 0.5);
+        }
+
+        .theme-dark .menu-item.active {
+            background: rgba(100, 100, 100, 0.2);
+            border-left-color: rgba(100, 100, 100, 1);
+        }
+
+        .theme-red {
+            border-color: rgba(231, 76, 60, 0.3);
+            box-shadow: 0 0 30px rgba(231, 76, 60, 0.2);
+        }
+
+        .theme-red .menu-header {
+            background: linear-gradient(135deg, rgba(231, 76, 60, 0.2), rgba(192, 57, 43, 0.2));
+            border-bottom-color: rgba(231, 76, 60, 0.5);
+        }
+
+        .theme-red .menu-item.active {
+            background: rgba(231, 76, 60, 0.2);
+            border-left-color: rgba(231, 76, 60, 1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Menu Container -->
+    <div class="menu-container" id="menuContainer">
+        <div class="menu-header">
+            <div class="banner-container" id="bannerContainer"></div>
+            <div class="breadcrumb" id="breadcrumb">Main Menu</div>
+        </div>
+        <div class="menu-content" id="menuContent"></div>
+        <div class="menu-footer" id="menuFooter">Alisomali is tuff</div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- Text Input Modal -->
+    <div class="text-input-modal" id="textInputModal">
+        <div class="text-input-label" id="textInputLabel">Enter text:</div>
+        <input type="text" class="text-input-field" id="textInputField" placeholder="Type here...">
+        <div class="text-input-buttons">
+            <button class="btn btn-secondary" id="textInputCancel">Cancel</button>
+            <button class="btn btn-primary" id="textInputSubmit">Submit</button>
+        </div>
+    </div>
+
+    <!-- Key Selection Modal -->
+    <div class="key-selection-modal" id="keySelectionModal">
+        <div class="key-selection-title" id="keySelectionTitle">Menu Keybind Setup</div>
+        <div class="key-selection-instruction" id="keySelectionInstruction">Press any key to set as the menu open key</div>
+        <div class="key-selection-hint" id="keySelectionHint">ESC to use default (Page Down)</div>
+    </div>
+
+    <!-- Player Info Panel -->
+    <div class="player-info-panel" id="playerInfoPanel">
+        <div class="player-info-header">Player Info</div>
+        <div id="playerInfoContent"></div>
+    </div>
+
+    <script>
+        // State management
+        let currentMenu = [];
+        let currentIndex = 0;
+        let currentTheme = 'orange';
+        let bannerImageUrl = '';
+        let textInputCallback = null;
+
+        // Listen for messages from FiveM
+        window.addEventListener('message', function(event) {
+            try {
+                const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                
+                if (data.action) {
+                    handleAction(data);
+                }
+            } catch (e) {
+                console.error('Error parsing message:', e);
+            }
+        });
+
+        function handleAction(data) {
+            switch(data.action) {
+                case 'setMenuVisible':
+                    setMenuVisible(data.visible);
+                    break;
+                case 'setCurrent':
+                    setCurrent(data.current, data.menu);
+                    break;
+                case 'setTheme':
+                    setTheme(data.theme);
+                    break;
+                case 'setBannerImage':
+                    setBannerImage(data.url);
+                    break;
+                case 'notify':
+                    showNotification(data.message, data.type || 'info');
+                    break;
+                case 'openTextInput':
+                    openTextInput(data.question, data.placeholder, data.maxLength, data.inputType);
+                    break;
+                case 'closeTextInput':
+                    closeTextInput();
+                    break;
+                case 'updateTextInput':
+                    updateTextInput(data.value);
+                    break;
+                case 'submitTextInput':
+                    submitTextInput();
+                    break;
+                case 'cancelTextInput':
+                    cancelTextInput();
+                    break;
+                case 'openKeySelection':
+                    openKeySelection(data.title, data.instruction, data.hint);
+                    break;
+                case 'closeKeySelection':
+                    closeKeySelection();
+                    break;
+                case 'setSelectedPlayer':
+                    setSelectedPlayer(data.playerData);
+                    break;
+                case 'updateBreadcrumb':
+                    updateBreadcrumb(data.breadcrumb);
+                    break;
+                case 'setFooterText':
+                    setFooterText(data.text);
+                    break;
+            }
+        }
+
+        function setMenuVisible(visible) {
+            const container = document.getElementById('menuContainer');
+            if (visible) {
+                container.classList.add('visible');
+            } else {
+                container.classList.remove('visible');
+            }
+        }
+
+        function setCurrent(index, menu) {
+            if (menu) {
+                currentMenu = menu;
+            }
+            if (index !== undefined) {
+                currentIndex = index;
+            }
+            renderMenu();
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            const container = document.getElementById('menuContainer');
+            container.className = 'menu-container visible theme-' + theme;
+        }
+
+        function setBannerImage(url) {
+            bannerImageUrl = url;
+            const bannerContainer = document.getElementById('bannerContainer');
+            if (url) {
+                bannerContainer.innerHTML = `<img src="${url}" alt="Banner">`;
+            } else {
+                bannerContainer.innerHTML = '';
+            }
+        }
+
+        function renderMenu() {
+            const content = document.getElementById('menuContent');
+            content.innerHTML = '';
+
+            if (!currentMenu || currentMenu.length === 0) {
+                content.innerHTML = '<div class="menu-item"><div class="menu-item-label">No items</div></div>';
+                return;
+            }
+
+            currentMenu.forEach((item, index) => {
+                const menuItem = document.createElement('div');
+                menuItem.className = 'menu-item';
+                if (index + 1 === currentIndex) {
+                    menuItem.classList.add('active');
+                }
+
+                const label = document.createElement('div');
+                label.className = 'menu-item-label';
+
+                if (item.icon) {
+                    const icon = document.createElement('i');
+                    icon.className = item.icon;
+                    icon.style.marginRight = '10px';
+                    label.appendChild(icon);
+                }
+
+                const text = document.createElement('span');
+                text.textContent = item.label || 'Unknown';
+                label.appendChild(text);
+
+                menuItem.appendChild(label);
+
+                const value = document.createElement('div');
+                value.className = 'menu-item-value';
+
+                if (item.type === 'checkbox') {
+                    value.textContent = item.checked ? '[ON]' : '[OFF]';
+                } else if (item.type === 'scroll' && item.options && item.options[item.selected - 1]) {
+                    value.textContent = item.options[item.selected - 1].label || item.options[item.selected - 1];
+                } else if (item.type === 'slider') {
+                    value.textContent = item.value;
+                } else if (item.type === 'submenu') {
+                    value.innerHTML = '<i class="fas fa-chevron-right"></i>';
+                }
+
+                menuItem.appendChild(value);
+                content.appendChild(menuItem);
+            });
+        }
+
+        function showNotification(message, type) {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = message;
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function openTextInput(question, placeholder, maxLength, inputType) {
+            const modal = document.getElementById('textInputModal');
+            const label = document.getElementById('textInputLabel');
+            const field = document.getElementById('textInputField');
+
+            label.textContent = question || 'Enter text:';
+            field.placeholder = placeholder || 'Type here...';
+            field.maxLength = maxLength || 100;
+            field.value = '';
+            modal.classList.add('visible');
+            field.focus();
+        }
+
+        function closeTextInput() {
+            const modal = document.getElementById('textInputModal');
+            modal.classList.remove('visible');
+        }
+
+        function updateTextInput(value) {
+            const field = document.getElementById('textInputField');
+            field.value = value;
+        }
+
+        function submitTextInput() {
+            // Note: In FiveM DUI system, input is handled directly by Lua via SendDuiMessage
+            // The Lua script captures key presses directly, so this is mainly for UI feedback
+            closeTextInput();
+        }
+
+        function cancelTextInput() {
+            // Note: In FiveM DUI system, input cancellation is handled directly by Lua
+            closeTextInput();
+        }
+
+        function openKeySelection(title, instruction, hint) {
+            const modal = document.getElementById('keySelectionModal');
+            document.getElementById('keySelectionTitle').textContent = title || 'Menu Keybind Setup';
+            document.getElementById('keySelectionInstruction').textContent = instruction || 'Press any key';
+            document.getElementById('keySelectionHint').textContent = hint || 'ESC to cancel';
+            modal.classList.add('visible');
+        }
+
+        function closeKeySelection() {
+            const modal = document.getElementById('keySelectionModal');
+            modal.classList.remove('visible');
+        }
+
+        function setSelectedPlayer(playerData) {
+            const panel = document.getElementById('playerInfoPanel');
+            const content = document.getElementById('playerInfoContent');
+
+            if (playerData) {
+                content.innerHTML = `
+                    <div class="player-info-item">
+                        <span class="player-info-label">Name:</span>
+                        <span class="player-info-value">${playerData.name || 'N/A'}</span>
+                    </div>
+                    <div class="player-info-item">
+                        <span class="player-info-label">ID:</span>
+                        <span class="player-info-value">${playerData.id || 'N/A'}</span>
+                    </div>
+                    <div class="player-info-item">
+                        <span class="player-info-label">Health:</span>
+                        <span class="player-info-value">${playerData.health || 0}</span>
+                    </div>
+                    <div class="player-info-item">
+                        <span class="player-info-label">Armor:</span>
+                        <span class="player-info-value">${playerData.armor || 0}</span>
+                    </div>
+                    <div class="player-info-item">
+                        <span class="player-info-label">Weapon:</span>
+                        <span class="player-info-value">${playerData.weapon || 'None'}</span>
+                    </div>
+                    <div class="player-info-item">
+                        <span class="player-info-label">Distance:</span>
+                        <span class="player-info-value">${playerData.distance || '0.0'}m</span>
+                    </div>
+                    <div class="player-info-item">
+                        <span class="player-info-label">Ping:</span>
+                        <span class="player-info-value">${playerData.ping || 0}ms</span>
+                    </div>
+                `;
+                panel.classList.add('visible');
+            } else {
+                panel.classList.remove('visible');
+            }
+        }
+
+        function updateBreadcrumb(breadcrumb) {
+            document.getElementById('breadcrumb').textContent = breadcrumb || 'Main Menu';
+        }
+
+        function setFooterText(text) {
+            document.getElementById('menuFooter').textContent = text || '';
+        }
+
+        // Text input handlers
+        document.getElementById('textInputSubmit').addEventListener('click', submitTextInput);
+        document.getElementById('textInputCancel').addEventListener('click', cancelTextInput);
+        document.getElementById('textInputField').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitTextInput();
+            }
+        });
+
+        // Helper function for FiveM resource name
+        function GetParentResourceName() {
+            // In FiveM DUI, this is automatically available
+            if (typeof GetParentResourceName === 'function') {
+                return GetParentResourceName();
+            }
+            return 'menu'; // Fallback
+        }
+
+        // Initialize
+        setTheme('orange');
+        setMenuVisible(false);
+    </script>
+</body>
+</html>
